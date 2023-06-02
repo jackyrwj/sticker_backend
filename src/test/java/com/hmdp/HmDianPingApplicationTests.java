@@ -1,9 +1,16 @@
 package com.hmdp;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
+import cn.hutool.core.lang.UUID;
+import com.hmdp.dto.UserDTO;
 import com.hmdp.entity.Shop;
+import com.hmdp.entity.User;
 import com.hmdp.service.impl.ShopServiceImpl;
+import com.hmdp.service.impl.UserServiceImpl;
 import com.hmdp.utils.CacheClient;
 import com.hmdp.utils.RedisIdWorker;
+import lombok.Cleanup;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.geo.Point;
@@ -11,17 +18,18 @@ import org.springframework.data.redis.connection.RedisGeoCommands;
 import org.springframework.data.redis.core.StringRedisTemplate;
 
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.io.BufferedInputStream;
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.hmdp.utils.RedisConstants.CACHE_SHOP_KEY;
-import static com.hmdp.utils.RedisConstants.SHOP_GEO_KEY;
+import static com.hmdp.utils.RedisConstants.*;
 
 @SpringBootTest
 class HmDianPingApplicationTests {
@@ -37,6 +45,9 @@ class HmDianPingApplicationTests {
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Resource
+    private UserServiceImpl userService;
 
     private ExecutorService es = Executors.newFixedThreadPool(500);
 
@@ -114,4 +125,31 @@ class HmDianPingApplicationTests {
         Long count = stringRedisTemplate.opsForHyperLogLog().size("hl2");
         System.out.println("count = " + count);
     }
+
+    @Test
+    void testMultiLoign() throws IOException {
+        List<User> userList = userService.lambdaQuery().last("limit 1000").list();
+        for(User user : userList){
+            String token = UUID.randomUUID().toString(true);
+            UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
+            Map<String, Object> userMap = BeanUtil.beanToMap(userDTO,new HashMap<>(),
+                    CopyOptions.create().ignoreNullValue()
+                            .setFieldValueEditor((fieldName, fieldValue) -> fieldValue.toString()));
+            String tokenKey = LOGIN_USER_KEY + token;
+            stringRedisTemplate.opsForHash().putAll(tokenKey,userMap);
+            stringRedisTemplate.expire(tokenKey,30,TimeUnit.MINUTES);
+        }
+        Set<String> keys = stringRedisTemplate.keys(LOGIN_USER_KEY + "*");
+        @Cleanup FileWriter fileWriter = new FileWriter("D:\\Project\\heima\\sticker_backend\\tokens.txt");
+        @Cleanup BufferedWriter bufferedWriter = new BufferedWriter(fileWriter);
+        assert keys != null;
+        for (String key : keys){
+            String token = key.substring(LOGIN_USER_KEY.length());
+            String text = token + "\n";
+            bufferedWriter.write(text);
+        }
+    }
+
+
+
 }

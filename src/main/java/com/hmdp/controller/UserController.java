@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpSession;
+import java.util.concurrent.TimeUnit;
+
+import static com.hmdp.utils.RedisConstants.LOGIN_USER_KEY;
+import static com.hmdp.utils.RedisConstants.LOGIN_USER_TTL;
 
 /**
  * <p>
@@ -26,6 +30,7 @@ import javax.servlet.http.HttpSession;
 @Slf4j
 @RestController
 @RequestMapping("/user")
+@CrossOrigin(origins = {"http://8.130.27.69"}, allowCredentials = "true")
 public class UserController {
 
     @Resource
@@ -61,8 +66,9 @@ public class UserController {
      */
     @PostMapping("/logout")
     public Result logout(){
-        // TODO 实现登出功能
-        return Result.fail("功能未完成");
+        UserHolder.removeUser();
+        return Result.ok("退出成功");
+//        return Result.fail("功能未完成");
     }
 
     @GetMapping("/me")

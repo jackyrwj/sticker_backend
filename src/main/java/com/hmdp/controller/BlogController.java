@@ -1,6 +1,8 @@
 package com.hmdp.controller;
 
 
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.toolkit.StringUtils;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.hmdp.dto.Result;
 import com.hmdp.dto.UserDTO;
@@ -29,6 +31,21 @@ public class BlogController {
 
     @PostMapping
     public Result saveBlog(@RequestBody Blog blog) {
+        if(blog.getImages() == null){
+            return Result.fail("图片不能为空");
+        }
+        if(StringUtils.isBlank(blog.getImages())){
+            return Result.fail("图片不能为空");
+        }
+        if(blog.getShopId() == null){
+            return Result.fail("关联表情包不能为空");
+        }
+        if(blog.getTitle() == null){
+            return Result.fail("标题不能为空");
+        }
+        if(blog.getContent() == null){
+            return Result.fail("内容不能为空");
+        }
         return blogService.saveBlog(blog);
     }
 
