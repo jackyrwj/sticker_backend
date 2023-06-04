@@ -30,7 +30,7 @@ import static com.hmdp.utils.RedisConstants.LOGIN_USER_TTL;
 @Slf4j
 @RestController
 @RequestMapping("/user")
-@CrossOrigin(origins = {"http://8.130.27.69"}, allowCredentials = "true")
+//@CrossOrigin(origins = {"http://8.130.27.69"}, allowCredentials = "true")
 public class UserController {
 
     @Resource
