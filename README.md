@@ -1,5 +1,50 @@
+# 表情购（EmojiBuy）
+## 项目介绍
+这是一款基于Spring Boot框架搭建的表情包商店APP，实现了丰富的功能，包括表情包查询、优惠券秒杀、发布点评、点赞关注、Feed流推送等。
+用户可以在APP中浏览各种热门表情包，
+APP还实现了优惠券秒杀，用户可以在秒杀活动期间获得超值的优惠券，从而享受更加优惠的购物体验。
+同时，用户还可以在APP中发布自己的点评，分享自己使用表情包的感受，以及点赞和关注其他用户的点评。
+作为一款社交型应用，该APP还实现了Feed流推送的功能，用户可以在APP中浏览其他用户的动态和点评，了解最新的表情包和活动信息，增加用户的互动和社交体验。
+
+## 项目特点
+该项目主要利用Redis实现了一系列常见功能，如登录分布式session；热点表情包key缓存；对非法key缓存空对象解决缓存穿透；使用逻辑过期
+机制解决热点key缓存击穿问题；zset实现排行榜；set交集实现共同关注；
+乐观锁解决了超卖问题、synchronized实现一人一单；
+并进行了异步改造，用Redis + Lua脚本实现库存预检，stream消息队列实现异步下单。提高了应用的性能和可靠性。
+项目采用了Spring Boot框架，代码高效、简便，同时还实现了前后端分离并符合RESTful风格，使得应用具有更好的扩展性和可维护性。
+
+
+### 后端技术栈
+
+* 主语言：Java
+* 框架：SpringBoot 2.7.0、Mybatis-plus、Spring Cloud
+* 数据库：Mysql8.0、Redis
+
+
+
+### 页面展示
+
+主页/登录页/类别页
+
+
+![描述](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606091354.png)![描述](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606091629.png)![描述](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606091700.png)
+
+
+表情包详情页/优惠券抢购
+
+![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606093006.png)![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606093308.png)![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606093315.png)
+
+表情包发布/主页展示
+
+![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606095454.png)![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606101527.png)![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606101544.png)
+
+共同关注/新消息推送
+
+![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606100923.png)![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230606101445.png)
+
 ### 项目结构
 ```
+emojibuy
 ├─src
 │  ├─main
 │  │  ├─java
@@ -26,22 +71,8 @@
 │  │  │          │      VoucherOrderController.java
 │  │  │          │
 │  │  │          ├─dto
-│  │  │          │      LoginFormDTO.java
-│  │  │          │      Result.java
-│  │  │          │      ScrollResult.java
-│  │  │          │      UserDTO.java
 │  │  │          │
 │  │  │          ├─entity
-│  │  │          │      Blog.java
-│  │  │          │      BlogComments.java
-│  │  │          │      Follow.java
-│  │  │          │      SeckillVoucher.java
-│  │  │          │      Shop.java
-│  │  │          │      ShopType.java
-│  │  │          │      User.java
-│  │  │          │      UserInfo.java
-│  │  │          │      Voucher.java
-│  │  │          │      VoucherOrder.java
 │  │  │          │
 │  │  │          ├─mapper
 │  │  │          │      BlogCommentsMapper.java
@@ -95,109 +126,21 @@
 │  │  │                  UserHolder.java
 │  │  │
 │  │  └─resources
-│  │      │  application-prod.yaml
-│  │      │  application.yaml
-│  │      │  seckill.lua
-│  │      │  unlock.lua
-│  │      │
-│  │      ├─db
-│  │      │      hmdp.sql
-│  │      │
-│  │      └─mapper
-│  │              VoucherMapper.xml
 │  │
 │  └─test
-│      └─java
-│          └─com
-│              └─hmdp
-│                      HmDianPingApplicationTests.java
-│                      NormalTest.java
-│                      RedissonTest.java
 │
 └─target
 ```
 
+## Quick Start
+
+1. 配置Redis（需要6.5及以上，保证stream命令可用），运行测试代码提前加载表情包key
+
+2. 修改项目的端口、密码
+
+3. 启动后端服务
 
 
 
-## 遇到的问题：
-### 1.GEOADD命令无法使用
-![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230601092430.png)
-原因是redis版本的问题，GEO功能是在redis3.2出来的
-> 登录客户端后使用命令"info server" 打印redis服务端版本
-![img.png](img.png)
 
-### 2.gitignore失效
-项目的前端中图片文件夹无需上传，配置gitignore后发现并为生效，一顿摸索时候发现：
-项目初始化后 .gitignore需要先commit一次，后面的才能扫描文件夹
- 
-![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230601093108.png)
 
-### 3. git commit后，撤销commit失败
-正常来说，普通的撤销 使用命令：
-```java
-git reset --soft HEAD^
-```
-HEAD^ 表示上一个版本，即上一次的commit，也可以写成HEAD~1
-如果进行两次的commit，想要都撤回，可以使用HEAD~2
-不删除工作空间的改动代码 ，撤销commit，不撤销add，使用--soft
-删除工作空间的改动代码，撤销commit且撤销add，使用--hard
-
-另外一点，如果commit注释写错了，先要改一下注释，有其他方法也能实现，如：
-```agsl
-git commit --amend
-```
-但是❗❗❗，如果第一次commit，用上述方法是无法撤销的，可以使用
-```java
-git update-ref -d HEAD
-```
-命令来实现想要的效果。尝试过后，发现commit被成功撤销，仍然保留了add后的结果。
-
-测试了好多次commit才解决 😭
-
-![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230601093915.png)
-
-### 4.Redis线上数据同步失败
-❗❗❗ 宝塔面板自带的redis下dump.rdb不在默认路径下，将本地数据同步到线上的时候要注意（沉痛教训😭，redis托管容易埋坑）
-![](https://raw.githubusercontent.com/jackyrwj/picb/master/20230603101312.png)
-
-另外在使用redis消息队列时，线上别忘记也要先建好消息队列
-```JAVA
-XGROUP CREATE stream.orders g1 0 MKSTREAM
-```
-
-### 5.拦截器错误
-Springboot框架中通过实现WebMvcConfigurer接口中的addInterceptors来实现拦截器的效果，
-有正向拦截(addPathPatterns)和反向拦截(excludePathPatterns),实际使用来反向拦截很有可能翻车，
-因为配置的是"不拦截"的，很有可能大部分正常的页面会被拦截，
-❗❗❗ 另外,即使配置了返回的是401"无权限",但会被浏览器识别成跨域（还不知道导致的）
-最后还是通过正向拦截解决了orz。
-```java
-public class MvcConfig implements WebMvcConfigurer {
-
-    @Resource
-    private StringRedisTemplate stringRedisTemplate;
-
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        // 登录拦截器
-//        registry.addInterceptor(new LoginInterceptor())
-//                .excludePathPatterns(
-//                        "/shop/**",
-//                        "/voucher/**",
-//                        "/shop-type/**",
-//                        "/upload/**",
-//                        "/blog/hot",
-//                        "/user/code",
-//                        "/user/login"
-//                ).order(1);
-        registry.addInterceptor(new LoginInterceptor())
-                .addPathPatterns(
-                        "/follow/**/**", 
-                        "/voucher-order/**"
-                ).order(1);
-        // token刷新的拦截器
-        registry.addInterceptor(new RefreshTokenInterceptor(stringRedisTemplate)).addPathPatterns("/**").order(0);
-    }
-}
-```
